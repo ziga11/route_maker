@@ -9,8 +9,10 @@ class RouteDB {
   static Database? _database;
 
   Future<Database> get database async {
+    print(_database);
     if (_database != null) return _database!;
     _database = await initDB();
+    test();
     return _database!;
   }
 
@@ -22,7 +24,7 @@ class RouteDB {
   }
 
   initDB() async {
-    String path = join(await getDatabasesPath(), 'rgegeq.db');
+    String path = join(await getDatabasesPath(), 'asf.db');
     return await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
       await db.execute("""CREATE TABLE IF NOT EXISTS Route(
@@ -34,41 +36,47 @@ class RouteDB {
            Saved INTEGER NOT NULL DEFAULT 0,
            PRIMARY KEY (Id)
         )""");
-      await createRoute(
-        title: "Test Route 1",
-        description: "This is a test route",
-        gpxData: "<gpx><trk><name>Test Track</name></trk></gpx>",
-      );
-
-      await createRoute(
-        title: "Test Route 2",
-        description: "Another test route",
-        gpxData: "<gpx><trk><name>Another Test Track</name></trk></gpx>",
-        saved: true,
-      );
-
-      renameRoute("Test Route 1", "Renamed Test Route");
-
-      var savedRoutes = await getRoutes(true);
-      print("Saved Routes:");
-      for (var route in savedRoutes) {
-        print("${route.title}: ${route.gpx}");
-      }
-
-      var unsavedRoutes = await getRoutes(false);
-      print("Unsaved Routes:");
-      for (var route in unsavedRoutes) {
-        print("${route.title}: ${route.gpx}");
-      }
-
-      await deleteRoute(title: "Renamed Test Route", saved: false);
-
-      var remainingRoutes = await getRoutes(false);
-      print("Remaining Unsaved Routes:");
-      for (var route in remainingRoutes) {
-        print("${route.title}: ${route.gpx}");
-      }
     });
+  }
+
+  Future<void> test() async {
+    print("Before 1");
+    await createRoute(
+      title: "Test Route 1",
+      description: "This is a test route",
+      gpxData: "<gpx><trk><name>Test Track</name></trk></gpx>",
+    );
+    print("After 1");
+
+    await createRoute(
+      title: "Test Route 2",
+      description: "Another test route",
+      gpxData: "<gpx><trk><name>Another Test Track</name></trk></gpx>",
+      saved: true,
+    );
+    print("After 2");
+
+    renameRoute("Test Route 1", "Renamed Test Route");
+
+    var savedRoutes = await getRoutes(true);
+    print("Saved Routes:");
+    for (var route in savedRoutes) {
+      print("${route.title}: ${route.gpx}");
+    }
+
+    var unsavedRoutes = await getRoutes(false);
+    print("Unsaved Routes:");
+    for (var route in unsavedRoutes) {
+      print("${route.title}: ${route.gpx}");
+    }
+
+    await deleteRoute(title: "Renamed Test Route", saved: false);
+
+    var remainingRoutes = await getRoutes(false);
+    print("Remaining Unsaved Routes:");
+    for (var route in remainingRoutes) {
+      print("${route.title}: ${route.gpx}");
+    }
   }
 
   Future<void> renameRoute(String currName, String newName) async {
@@ -132,24 +140,41 @@ class RouteDB {
     required String gpxData,
     bool saved = false,
   }) async {
+    print("gte4hr");
     final db = await database;
+    print("rege");
 
     String fileName = "${DateTime.now().millisecondsSinceEpoch}.gpx";
+    print(fileName); // Check if fileName is generated
 
     var status = await Permission.storage.request();
-    if (!status.isGranted) return;
+    print("Permission status: $status"); // Check permission status
+    if (!status.isGranted) {
+      print("Permission not granted");
+      return;
+    }
 
     Directory? baseDir;
     if (Platform.isAndroid) {
       baseDir = await getExternalStorageDirectory(); // Android
+      print(
+          "External storage directory: ${baseDir?.path}"); // Log directory path
     } else if (Platform.isIOS) {
       baseDir = await getApplicationDocumentsDirectory(); // iOS
     }
 
-    String filePath = join(baseDir!.path, fileName);
+    if (baseDir == null) {
+      print("Base directory not found");
+      return;
+    }
+
+    String filePath = join(baseDir.path, fileName);
+    print("File path: $filePath"); // Log file path
 
     File gpxFile = File(filePath);
     await gpxFile.writeAsString(gpxData);
+
+    print("File written: ${gpxFile.readAsStringSync()}"); // Verify file content
 
     await db.insert("Route", {
       "Id": fileName,
@@ -158,5 +183,7 @@ class RouteDB {
       "GPX": filePath,
       "Saved": saved ? 1 : 0
     });
+
+    print("inserted");
   }
 }

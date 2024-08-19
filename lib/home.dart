@@ -35,7 +35,6 @@ class _HomeState extends State<Home> {
                   itemCount: snapshot.data!.length,
                   itemBuilder: (context, index) {
                     final entity = snapshot.data![index];
-
                     final gpx = GpxReader().fromString(entity.gpx);
 
                     final trackPoints = <LatLng>[];
@@ -48,15 +47,12 @@ class _HomeState extends State<Home> {
                         }
                       }
                     }
-                    print(gpx);
-                    print(trackPoints);
 
                     final polyline = Polyline(
                       points: trackPoints,
                       strokeWidth: 4.0,
                       color: Colors.blue,
                     );
-                    print(polyline);
 
                     return InkWell(
                         child: Column(

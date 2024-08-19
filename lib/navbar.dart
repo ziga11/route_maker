@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:route_maker/home.dart';
 import 'package:route_maker/map.dart';
-import 'package:route_maker/profile.dart';
 
 class Navbar extends StatefulWidget {
   const Navbar({super.key});
